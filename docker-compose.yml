@@ -1,0 +1,125 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: azatech_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-azatech}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-azatech_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-azatech_shop}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-azatech} -d ${POSTGRES_DB:-azatech_shop}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+
+  redis:
+    image: redis:7-alpine
+    container_name: azatech_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: azatech_rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: azatech_mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: azatech_api
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-azatech}:${POSTGRES_PASSWORD:-azatech_secret}@postgres:5432/${POSTGRES_DB:-azatech_shop}?schema=public
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      SMTP_FROM: noreply@azatech.id
+      ADMIN_ALERT_EMAIL: admin@azatech.id
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-azatech_super_secret_access_key_2026}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-azatech_super_secret_refresh_key_2026}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    command: sh -c "npx prisma migrate deploy && npx prisma db seed && node dist/server.js"
+
+
+  worker:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: azatech_worker
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-azatech}:${POSTGRES_PASSWORD:-azatech_secret}@postgres:5432/${POSTGRES_DB:-azatech_shop}?schema=public
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      SMTP_FROM: noreply@azatech.id
+      ADMIN_ALERT_EMAIL: admin@azatech.id
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    command: node dist/worker.js
+
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: azatech_web
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: http://localhost:4000/api
+    depends_on:
+      - api
+
+
+volumes:
+  pgdata:
