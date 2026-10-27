@@ -1,17 +1,17 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: azatech_postgres
+    container_name: apps_postgres
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-azatech}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-azatech_secret}
-      POSTGRES_DB: ${POSTGRES_DB:-azatech_shop}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-azatech} -d ${POSTGRES_DB:-azatech_shop}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -19,7 +19,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: azatech_redis
+    container_name: apps_redis
     ports:
       - "6379:6379"
     healthcheck:
@@ -31,13 +31,13 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management-alpine
-    container_name: azatech_rabbitmq
+    container_name: apps_rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
@@ -47,7 +47,7 @@ services:
 
   mailpit:
     image: axllent/mailpit:latest
-    container_name: azatech_mailpit
+    container_name: apps_mailpit
     ports:
       - "1025:1025"
       - "8025:8025"
@@ -55,24 +55,24 @@ services:
 
   api:
     build:
-      context: ./apps/api
+      context: ./api
       dockerfile: Dockerfile
-    container_name: azatech_api
+    container_name: apps_api
     ports:
       - "4000:4000"
     environment:
-      NODE_ENV: production
+      NODE_ENV: ${NODE_ENV:-production}
       PORT: 4000
-      DATABASE_URL: postgresql://${POSTGRES_USER:-azatech}:${POSTGRES_PASSWORD:-azatech_secret}@postgres:5432/${POSTGRES_DB:-azatech_shop}?schema=public
-      REDIS_URL: redis://redis:6379
-      RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+      REDIS_URL: redis://${REDIS_HOST:-redis}:${REDIS_PORT:-6379}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672
       SMTP_HOST: mailpit
       SMTP_PORT: 1025
-      SMTP_FROM: noreply@azatech.id
-      ADMIN_ALERT_EMAIL: admin@azatech.id
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-azatech_super_secret_access_key_2026}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-azatech_super_secret_refresh_key_2026}
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      SMTP_FROM: ${SMTP_FROM:-noreply@azatech.com}
+      ADMIN_ALERT_EMAIL: ${ADMIN_ALERT_EMAIL:-admin@azatech.com}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      CORS_ORIGIN: ${CORS_ORIGIN}
     depends_on:
       postgres:
         condition: service_healthy
@@ -85,18 +85,18 @@ services:
 
   worker:
     build:
-      context: ./apps/api
+      context: ./api
       dockerfile: Dockerfile
-    container_name: azatech_worker
+    container_name: apps_worker
     environment:
-      NODE_ENV: production
-      DATABASE_URL: postgresql://${POSTGRES_USER:-azatech}:${POSTGRES_PASSWORD:-azatech_secret}@postgres:5432/${POSTGRES_DB:-azatech_shop}?schema=public
-      REDIS_URL: redis://redis:6379
-      RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASS:-guest}@rabbitmq:5672
+      NODE_ENV: ${NODE_ENV:-production}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+      REDIS_URL: redis://${REDIS_HOST:-redis}:${REDIS_PORT:-6379}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672
       SMTP_HOST: mailpit
       SMTP_PORT: 1025
-      SMTP_FROM: noreply@azatech.id
-      ADMIN_ALERT_EMAIL: admin@azatech.id
+      SMTP_FROM: ${SMTP_FROM:-noreply@azatech.com}
+      ADMIN_ALERT_EMAIL: ${ADMIN_ALERT_EMAIL:-admin@azatech.com}
     depends_on:
       postgres:
         condition: service_healthy
@@ -109,14 +109,15 @@ services:
 
   web:
     build:
-      context: ./apps/web
+      context: ./web
       dockerfile: Dockerfile
-    container_name: azatech_web
+    container_name: apps_web
     ports:
       - "3000:3000"
     environment:
-      NODE_ENV: production
+      NODE_ENV: ${NODE_ENV:-production}
       NEXT_PUBLIC_API_URL: http://localhost:4000/api
+      INTERNAL_API_URL: http://api:4000/api
     depends_on:
       - api
 

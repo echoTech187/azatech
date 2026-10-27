@@ -1,11 +1,13 @@
 # Stage 1: Dependencies & Build
 FROM node:24-alpine AS builder
 WORKDIR /app
+ENV DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
 
 COPY package.json package-lock.json* ./
 RUN npm install
 
 COPY prisma ./prisma
+COPY prisma*.config.ts ./
 COPY tsconfig.json ./
 COPY src ./src
 
@@ -16,12 +18,13 @@ FROM node:24-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/dist ./dist
+COPY --chown=node:node --from=builder /app/package.json ./
+COPY --chown=node:node --from=builder /app/node_modules ./node_modules
+COPY --chown=node:node --from=builder /app/prisma ./prisma
+COPY --chown=node:node --from=builder /app/prisma*.config.ts ./
+COPY --chown=node:node --from=builder /app/src/generated ./src/generated
+COPY --chown=node:node --from=builder /app/dist ./dist
 
-RUN chown -R node:node /app
 USER node
 
 EXPOSE 4000
