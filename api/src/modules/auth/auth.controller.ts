@@ -19,8 +19,9 @@ export class AuthController {
 
   private readonly authLimiter = rateLimit({
     windowMs: 60 * 1000,
-    max: 15,
-    message: { success: false, message: 'Terlalu banyak percobaan login, coba lagi nanti.' },
+    max: 30,
+    skipSuccessfulRequests: true,
+    message: { success: false, message: 'Terlalu banyak percobaan login gagal, coba lagi nanti.' },
   });
 
   constructor(private readonly service: AuthService = authService) {

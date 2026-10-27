@@ -1,18 +1,21 @@
 'use client';
 
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/src/application/hooks/use-auth';
 
-
 export function Navbar() {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
   const { user, isAdmin, logout } = useAuth({ redirectIfUnauthenticated: true });
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  if (pathname === '/login' || !user) return null;
+  if (!mounted || pathname === '/login' || !user) return null;
 
 
   return (
