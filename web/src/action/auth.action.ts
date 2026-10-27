@@ -12,7 +12,7 @@ export async function loginAction(previousState: AuthState, formData: FormData):
 
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
-    const rememberMe = formData.get('remember_me') === 'on';
+    const _rememberMe = formData.get('remember_me') === 'on';
     if (!email || !password) {
         return { success: false, message: 'Email dan password wajib diisi' };
     }
@@ -30,8 +30,7 @@ export async function loginAction(previousState: AuthState, formData: FormData):
         });
         const data = await res.json();
         if (!res.ok) {
-            const body = await res.json();
-            throw new Error(body.message || 'Login gagal');
+            throw new Error(data?.message || 'Login gagal');
         }
 
         const cookieStore = await cookies();
@@ -42,8 +41,9 @@ export async function loginAction(previousState: AuthState, formData: FormData):
             path: '/',
             maxAge: 60 * 15, // 15 menit
         });
-    } catch (err: any) {
-        return { success: false, message: err.message || 'Terjadi kesalahan saat login' };
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Terjadi kesalahan saat login';
+        return { success: false, message };
     }
     redirect('/dashboard');
 };
