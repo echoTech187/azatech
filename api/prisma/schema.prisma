@@ -86,9 +86,10 @@ model Product {
   deleted_at          DateTime?
   order_items         OrderItem[]
   stock_movements     StockMovement[]
-
+  is_active           Boolean         @default(true)
 
   @@index([deleted_at, product_name], name: "idx_products_active_name")
+  @@index([is_active], name: "idx_products_is_active")
   @@map("products")
 }
 

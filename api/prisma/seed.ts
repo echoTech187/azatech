@@ -60,6 +60,7 @@ async function main() {
         stock: initialStock,
         price: price,
         low_stock_threshold: 10,
+        is_active: true,
       },
     });
 

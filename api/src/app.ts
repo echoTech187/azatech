@@ -5,12 +5,14 @@ import { env } from './config/env';
 import { requestIdMiddleware } from './middlewares/request-id.middleware';
 import { errorMiddleware } from './middlewares/error.middleware';
 import { authController, AuthController } from './modules/auth/auth.controller';
+import { productsController, ProductsController } from './modules/products/product.module';
 
 export class Application {
   public readonly expressApp: Express;
 
   constructor(
     private readonly authModule: AuthController = authController,
+    private readonly productsModule: ProductsController = productsController
   ) {
     this.expressApp = express();
     this.configureMiddlewares();
@@ -35,6 +37,7 @@ export class Application {
     });
 
     this.expressApp.use('/api/auth', this.authModule.router);
+    this.expressApp.use('/api/products', this.productsModule.router);
   }
 
   private configureErrorHandling(): void {
