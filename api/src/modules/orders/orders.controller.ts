@@ -54,7 +54,9 @@ export class OrdersController {
       const fromDate = req.query.from ? new Date(String(req.query.from)) : undefined;
       const toDate = req.query.to ? new Date(String(req.query.to)) : undefined;
 
-      const where = {
+      const search = req.query.search || req.query.q ? String(req.query.search || req.query.q).trim() : undefined;
+
+      const where: any = {
         ...(status ? { status: status as any } : {}),
         ...(customerId ? { customer_id: customerId } : {}),
         ...(fromDate || toDate
@@ -63,6 +65,14 @@ export class OrdersController {
                 ...(fromDate ? { gte: fromDate } : {}),
                 ...(toDate ? { lte: toDate } : {}),
               },
+            }
+          : {}),
+        ...(search
+          ? {
+              OR: [
+                { order_number: { contains: search, mode: 'insensitive' } },
+                { customer: { customer_name: { contains: search, mode: 'insensitive' } } },
+              ],
             }
           : {}),
       };
@@ -183,7 +193,19 @@ export class OrdersController {
       });
       if (!order) throw new AppError(404, 'Order tidak ditemukan');
       const html = buildInvoiceHtml(order);
+
+      res.removeHeader('Content-Security-Policy');
+      res.removeHeader('Cross-Origin-Embedder-Policy');
+      res.removeHeader('Cross-Origin-Opener-Policy');
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
+
+      if (req.query.download === '1' || req.query.download === 'true') {
+        res.setHeader(
+          'Content-Disposition',
+          `attachment; filename="Invoice-${order.order_number}.html"`
+        );
+      }
+
       res.send(html);
     } catch (err) {
       next(err);

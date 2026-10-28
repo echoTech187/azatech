@@ -227,7 +227,7 @@ export function OrderForm({
           disabled={isSubmitting}
           className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-400 text-white font-bold px-6 py-2.5 rounded-xl shadow-sm transition active:scale-98"
         >
-          {isSubmitting ? 'Memproses Order...' : 'Buat Order Sekarang'}
+          {isSubmitting ? 'Memproses Pesanan...' : 'Buat Pesanan Sekarang'}
         </button>
       </div>
     </form>

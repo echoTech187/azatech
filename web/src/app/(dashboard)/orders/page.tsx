@@ -32,6 +32,8 @@ export default function OrdersPage() {
   const fromDate = searchParams.get('from') ?? '';
   const toDate = searchParams.get('to') ?? '';
 
+  const search = searchParams.get('search') ?? searchParams.get('q') ?? '';
+
   const { data: customers } = useAllCustomersDirectoryQuery();
 
   const { data, isLoading, refetch } = useOrdersQuery({
@@ -41,6 +43,7 @@ export default function OrdersPage() {
     ...(customerId ? { customer_id: customerId } : {}),
     ...(fromDate ? { from: fromDate } : {}),
     ...(toDate ? { to: toDate } : {}),
+    ...(search ? { search } : {}),
   });
 
   const orders = useMemo(() => data?.data ?? [], [data]);
@@ -127,7 +130,7 @@ export default function OrdersPage() {
     },
     {
       header: 'Total Order',
-      width: '20%',
+      width: '22%',
       render: (item: Order) => (
         <div>
           <div className="font-bold text-slate-900 text-sm">
@@ -141,33 +144,8 @@ export default function OrdersPage() {
     },
     {
       header: 'Status',
-      width: '14%',
+      width: '18%',
       render: (item: Order) => getStatusBadge(item.status),
-    },
-    {
-      header: 'Aksi',
-      width: '14%',
-      render: (item: Order) => (
-        <div className="flex items-center gap-2">
-          <Link
-            href={`/orders/${item.id}`}
-            className="px-2.5 py-1 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition"
-          >
-            Detail ›
-          </Link>
-          {['PAID', 'SHIPPED', 'COMPLETED'].includes(item.status) && (
-            <a
-              href={orderRepository.getInvoiceDownloadUrl(item.id)}
-              target="_blank"
-              rel="noreferrer"
-              title="Unduh Invoice"
-              className="p-1 text-slate-500 hover:text-slate-800 text-xs font-medium"
-            >
-              🧾
-            </a>
-          )}
-        </div>
-      ),
     },
   ];
 
@@ -177,7 +155,7 @@ export default function OrdersPage() {
         config={{
           title: 'Manajemen Transaksi Order',
           desc: 'Kelola order penjualan, lacak siklus status state machine, dan cetak invoice pembayaran.',
-          addBtn: 'Buat Order Baru',
+          addBtn: 'Buat Pesanan Baru',
           icon: '📋',
         }}
         dataList={orders}
@@ -186,7 +164,7 @@ export default function OrdersPage() {
         onPageChange={(p) => updateUrlParams({ page: String(p) })}
         onPageSizeChange={(ps) => updateUrlParams({ per_page: String(ps), page: '1' })}
         onSearchChange={(query) => {
-          // Client filter or URL filter
+          updateUrlParams({ search: query, page: '1' });
         }}
         showActiveFilter={false}
         canCreate={true}
@@ -202,6 +180,27 @@ export default function OrdersPage() {
         getEditFormData={() => ({})}
         getDeleteLabel={(item: Order) => item.order_number}
         tableColumns={tableColumns}
+        renderExtraActions={(item: Order) => (
+          <div className="flex items-center gap-1.5">
+            <Link
+              href={`/orders/${item.id}`}
+              className="px-2.5 py-1 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition"
+            >
+              Detail ›
+            </Link>
+            {['PAID', 'SHIPPED', 'COMPLETED'].includes(item.status) && (
+              <button
+                type="button"
+                onClick={() => orderRepository.openInvoice(item.id)}
+                title="Unduh & Cetak Invoice"
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition border border-emerald-200 cursor-pointer shadow-2xs"
+              >
+                <span>🧾</span>
+                <span>Invoice</span>
+              </button>
+            )}
+          </div>
+        )}
         renderFormFields={() => null}
         renderExtraFilters={() => (
           <div className="flex flex-wrap items-center gap-2 w-full pt-1">

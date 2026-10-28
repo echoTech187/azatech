@@ -11,12 +11,17 @@ interface JwtAccessPayload {
 }
 
 export function requireAuth(req: Request, _res: Response, next: NextFunction): void {
+    let token: string | undefined;
     const authHeader = req.header('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return next(new AppError(401, 'Token autentikasi tidak ditemukan'));
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.slice(7);
+    } else if (typeof req.query.token === 'string' && req.query.token.trim().length > 0) {
+        token = req.query.token.trim();
     }
 
-    const token = authHeader.slice(7);
+    if (!token) {
+        return next(new AppError(401, 'Token autentikasi tidak ditemukan'));
+    }
     try {
         const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as JwtAccessPayload;
         req.user = {

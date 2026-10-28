@@ -8,15 +8,19 @@ import { authController, AuthController } from './modules/auth/auth.controller';
 import { productsController, ProductsController } from './modules/products/product.module';
 import { customersController, CustomersController } from './modules/customers/customers.controller';
 import { ordersController, OrdersController } from './modules/orders/orders.controller';
+import { reportsController, ReportsController } from './modules/reports/reports.controller';
+import { healthController, HealthController } from './modules/health/health.controller';
 
 export class Application {
   public readonly expressApp: Express;
 
   constructor(
+    private readonly healthModule: HealthController = healthController,
     private readonly authModule: AuthController = authController,
     private readonly productsModule: ProductsController = productsController,
     private readonly customersModule: CustomersController = customersController,
-    private readonly ordersModule: OrdersController = ordersController
+    private readonly ordersModule: OrdersController = ordersController,
+    private readonly reportsModule: ReportsController = reportsController
   ) {
     this.expressApp = express();
     this.configureMiddlewares();
@@ -25,7 +29,19 @@ export class Application {
   }
 
   private configureMiddlewares(): void {
-    this.expressApp.use(helmet());
+    this.expressApp.use(
+      helmet({
+        contentSecurityPolicy: {
+          directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrcAttr: ["'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", 'data:', 'https:'],
+          },
+        },
+      })
+    );
     this.expressApp.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
     this.expressApp.use(express.json());
     this.expressApp.use(requestIdMiddleware);
@@ -40,10 +56,12 @@ export class Application {
       });
     });
 
+    this.expressApp.use('/api/health', this.healthModule.router);
     this.expressApp.use('/api/auth', this.authModule.router);
     this.expressApp.use('/api/products', this.productsModule.router);
     this.expressApp.use('/api/customers', this.customersModule.router);
     this.expressApp.use('/api/orders', this.ordersModule.router);
+    this.expressApp.use('/api', this.reportsModule.router);
   }
 
   private configureErrorHandling(): void {

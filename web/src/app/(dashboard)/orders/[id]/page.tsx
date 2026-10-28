@@ -137,14 +137,24 @@ export default function OrderDetailPage() {
               </button>
             )}
             {canDownloadInvoice && (
-              <a
-                href={orderRepository.getInvoiceDownloadUrl(order.id)}
-                target="_blank"
-                rel="noreferrer"
-                className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 shadow-xs"
-              >
-                <span>🧾</span> Unduh Invoice
-              </a>
+              <>
+                <button
+                  type="button"
+                  onClick={() => orderRepository.openInvoice(order.id)}
+                  title="Buka & Cetak Invoice Pembayaran"
+                  className="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 shadow-xs cursor-pointer"
+                >
+                  <span>🧾</span> Cetak Invoice
+                </button>
+                <button
+                  type="button"
+                  onClick={() => orderRepository.downloadInvoiceFile(order.id)}
+                  title="Unduh File Invoice HTML"
+                  className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-4 py-2 rounded-xl text-xs font-bold transition inline-flex items-center gap-1.5 shadow-xs cursor-pointer"
+                >
+                  <span>⬇️</span> Unduh File
+                </button>
+              </>
             )}
           </div>
         </div>

@@ -25,7 +25,7 @@ export function Navbar() {
           <span className="font-bold text-lg tracking-tight text-emerald-400">
             Azatech Online Shop
           </span>
-          <nav className="flex items-center gap-4 text-sm font-medium">
+          <nav className="flex items-center justify-between gap-2 md:gap-4 text-sm font-medium ">
             <Link href="/dashboard" className="hover:text-emerald-300">
               Dashboard
             </Link>
@@ -36,19 +36,19 @@ export function Navbar() {
               Pelanggan
             </Link>
             <Link href="/orders" className="hover:text-emerald-300">
-              Daftar Order
-            </Link>
-            <Link
-              href="/orders/new"
-              className="bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded text-white"
-            >
-              + Buat Order
+              Daftar Pesanan
             </Link>
             {isAdmin && (
               <Link href="/reports" className="hover:text-emerald-300 text-amber-300">
                 Laporan Penjualan
               </Link>
             )}
+            <Link
+              href="/orders/new"
+              className="bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 rounded text-white"
+            >
+              + Buat Pesanan
+            </Link>
           </nav>
         </div>
 

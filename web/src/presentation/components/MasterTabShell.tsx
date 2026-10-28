@@ -160,9 +160,11 @@ export default function MasterTabShell({
     }
   };
 
-  // Filter Client-Side (digunakan jika meta tidak disertakan atau server belum memfilter status)
-  const filteredData = dataList.filter((item) => {
-    if (meta && onStatusChange) return true; // Server-side sudah memfilter dari database
+  // Mode pagination: Server-Side vs Client-Side
+  const isServerSide = Boolean(meta);
+
+  // Filter Client-Side (hanya digunakan jika server-side pagination tidak aktif)
+  const filteredData = isServerSide ? dataList : dataList.filter((item) => {
     const q = searchQuery.toLowerCase();
     const defaultFields = [
       item.product_name, item.product_code, item.name, item.key, item.label,
@@ -181,15 +183,13 @@ export default function MasterTabShell({
     return true;
   });
 
-  // Mode pagination: Server-Side vs Client-Side
-  const isServerSide = Boolean(meta);
-  const activePage = meta ? meta.page : currentPage;
-  const activePageSize = meta ? meta.per_page : pageSize;
-  const activeTotalPages = meta ? Math.max(1, meta.total_pages) : Math.max(1, Math.ceil(filteredData.length / pageSize));
-  const activeTotalItems = (isServerSide && onStatusChange) ? meta!.total : filteredData.length;
-  const activeStartIndex = meta ? (meta.page - 1) * meta.per_page : (currentPage - 1) * pageSize;
-  const activeEndIndex = meta ? Math.min(activeStartIndex + dataList.length, activeTotalItems) : Math.min(activeStartIndex + pageSize, filteredData.length);
-  const displayData = (isServerSide && onStatusChange) ? dataList : filteredData.slice(activeStartIndex, activeEndIndex);
+  const activePage = isServerSide ? meta!.page : currentPage;
+  const activePageSize = isServerSide ? meta!.per_page : pageSize;
+  const activeTotalPages = isServerSide ? Math.max(1, meta!.total_pages) : Math.max(1, Math.ceil(filteredData.length / pageSize));
+  const activeTotalItems = isServerSide ? meta!.total : filteredData.length;
+  const activeStartIndex = isServerSide ? (meta!.page - 1) * meta!.per_page : (currentPage - 1) * pageSize;
+  const activeEndIndex = isServerSide ? Math.min(activeStartIndex + dataList.length, activeTotalItems) : Math.min(activeStartIndex + pageSize, filteredData.length);
+  const displayData = isServerSide ? dataList : filteredData.slice(activeStartIndex, activeEndIndex);
 
   const hasActiveFilters = (showActiveFilter && filterActive !== 'all') || activePageSize !== 10;
 
