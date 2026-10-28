@@ -1,7 +1,16 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import rateLimit from 'express-rate-limit';
 import { ReportsService, reportsService } from './reports.service';
 import { sendSuccess } from '../../common/response';
 import { requireAuth, requireRoles } from '../../middlewares/auth.middleware';
+
+const reportsLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 500,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Terlalu banyak permintaan laporan, coba lagi nanti.' },
+});
 
 export class ReportsController {
   public readonly router: Router;
@@ -12,6 +21,7 @@ export class ReportsController {
   }
 
   private initializeRoutes(): void {
+    this.router.use(reportsLimiter);
     this.router.get('/dashboard/summary', requireAuth, this.getDashboardSummary);
     this.router.get(
       '/reports/sales',

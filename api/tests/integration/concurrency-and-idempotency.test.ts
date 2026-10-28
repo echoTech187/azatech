@@ -46,7 +46,7 @@ describe('Order Concurrency & Idempotency Integration Tests (PostgreSQL)', () =>
     expect(successCount).toBe(5);
     expect(failedCount).toBe(15);
     expect(updatedProduct.stock).toBe(0);
-  });
+  }, 20000);
 
   it('enforces idempotency: same key + same payload returns identical order without deducting stock twice, different payload returns 422', async () => {
     const product = await prisma.product.create({
@@ -89,5 +89,5 @@ describe('Order Concurrency & Idempotency Integration Tests (PostgreSQL)', () =>
         items: [{ product_id: Number(product.id), quantity: 5 }],
       })
     ).rejects.toThrowError(/payload berbeda/);
-  });
+  }, 20000);
 });

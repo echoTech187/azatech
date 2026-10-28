@@ -1,8 +1,17 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { ProductsService, productsService } from './product.service';
 import { sendSuccess } from '../../common/response';
 import { requireAuth, requireRoles } from '../../middlewares/auth.middleware';
+
+const productsLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 1000,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Terlalu banyak permintaan katalog produk, coba lagi nanti.' },
+});
 
 const productBodySchema = z.object({
   product_code: z.string().min(2).max(50),
@@ -29,6 +38,7 @@ export class ProductsController {
   }
 
   private initializeRoutes(): void {
+    this.router.use(productsLimiter);
     this.router.get('/', requireAuth, this.list);
     this.router.get('/:id', requireAuth, this.getById);
     this.router.post('/', requireAuth, requireRoles(['admin']), this.create);

@@ -23,6 +23,14 @@ const createOrderSchema = z.object({
 export class OrdersController {
   public readonly router: Router;
 
+  private readonly ordersLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 1000,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'Terlalu banyak permintaan order, coba lagi nanti.' },
+  });
+
   private readonly orderLimiter = rateLimit({
     windowMs: 60 * 1000,
     max: 60,
@@ -35,6 +43,7 @@ export class OrdersController {
   }
 
   private initializeRoutes(): void {
+    this.router.use(this.ordersLimiter);
     this.router.get('/', requireAuth, this.list);
     this.router.get('/:id', requireAuth, this.getById);
     this.router.post('/', requireAuth, this.orderLimiter, this.create);

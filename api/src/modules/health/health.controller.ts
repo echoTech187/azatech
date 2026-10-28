@@ -1,14 +1,24 @@
 import { Router, Request, Response } from 'express';
+import rateLimit from 'express-rate-limit';
 import { prisma } from '../../config/database';
 import { redis } from '../../config/redis';
 import { rabbitMQ } from '../../config/rabbitmq';
 import { sendSuccess } from '../../common/response';
+
+const healthLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Terlalu banyak permintaan health check, coba lagi nanti.' },
+});
 
 export class HealthController {
   public readonly router: Router;
 
   constructor() {
     this.router = Router();
+    this.router.use(healthLimiter);
     this.router.get('/', this.check);
   }
 

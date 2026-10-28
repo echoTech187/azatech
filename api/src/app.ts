@@ -11,7 +11,16 @@ import { ordersController, OrdersController } from './modules/orders/orders.cont
 import { reportsController, ReportsController } from './modules/reports/reports.controller';
 import { healthController, HealthController } from './modules/health/health.controller';
 import swaggerUi from 'swagger-ui-express';
+import rateLimit from 'express-rate-limit';
 import { swaggerDocument } from './config/swagger';
+
+const globalApiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 2000,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Terlalu banyak permintaan API, coba lagi nanti.' },
+});
 
 export class Application {
   public readonly expressApp: Express;
@@ -58,6 +67,7 @@ export class Application {
       });
     });
 
+    this.expressApp.use('/api', globalApiLimiter);
     this.expressApp.use('/api/health', this.healthModule.router);
     this.expressApp.use('/api/auth', this.authModule.router);
     this.expressApp.use('/api/products', this.productsModule.router);

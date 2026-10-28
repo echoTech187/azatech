@@ -1,8 +1,17 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { CustomersService, customersService } from './customers.service';
 import { sendSuccess } from '../../common/response';
 import { requireAuth, requireRoles } from '../../middlewares/auth.middleware';
+
+const customersLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 1000,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Terlalu banyak permintaan data pelanggan, coba lagi nanti.' },
+});
 
 const customerBodySchema = z.object({
   customer_name: z.string().min(2, 'Nama pelanggan minimal 2 karakter').max(150),
@@ -24,6 +33,7 @@ export class CustomersController {
   }
 
   private initializeRoutes(): void {
+    this.router.use(customersLimiter);
     this.router.get('/', requireAuth, this.list);
     this.router.get('/:id', requireAuth, this.getById);
     this.router.post('/', requireAuth, requireRoles(['admin', 'cashier']), this.create);

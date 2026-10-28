@@ -17,6 +17,14 @@ const refreshSchema = z.object({
 export class AuthController {
   public readonly router: Router;
 
+  private readonly generalAuthLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 500,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'Terlalu banyak permintaan otentikasi, coba lagi nanti.' },
+  });
+
   private readonly authLimiter = rateLimit({
     windowMs: 60 * 1000,
     max: 30,
@@ -30,6 +38,7 @@ export class AuthController {
   }
 
   private initializeRoutes(): void {
+    this.router.use(this.generalAuthLimiter);
     this.router.post('/login', this.authLimiter, this.login);
     this.router.post('/refresh', this.refresh);
     this.router.post('/logout', requireAuth, this.logout);
