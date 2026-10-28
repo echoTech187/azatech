@@ -1,4 +1,4 @@
-import express, { Express } from 'express';
+import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { env } from './config/env';
@@ -10,6 +10,8 @@ import { customersController, CustomersController } from './modules/customers/cu
 import { ordersController, OrdersController } from './modules/orders/orders.controller';
 import { reportsController, ReportsController } from './modules/reports/reports.controller';
 import { healthController, HealthController } from './modules/health/health.controller';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerDocument } from './config/swagger';
 
 export class Application {
   public readonly expressApp: Express;
@@ -62,6 +64,24 @@ export class Application {
     this.expressApp.use('/api/customers', this.customersModule.router);
     this.expressApp.use('/api/orders', this.ordersModule.router);
     this.expressApp.use('/api', this.reportsModule.router);
+
+    this.expressApp.get('/api/docs.json', (_req: Request, res: Response) => {
+      res.setHeader('Content-Type', 'application/json');
+      res.send(swaggerDocument);
+    });
+
+    this.expressApp.use(
+      '/api/docs',
+      (_req: Request, res: Response, next: NextFunction) => {
+        res.removeHeader('Content-Security-Policy');
+        next();
+      },
+      swaggerUi.serve,
+      swaggerUi.setup(swaggerDocument, {
+        customSiteTitle: 'Azatech API Documentation — Swagger UI',
+        customCss: '.swagger-ui .topbar { display: none }',
+      })
+    );
   }
 
   private configureErrorHandling(): void {

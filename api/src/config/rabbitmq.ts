@@ -54,6 +54,15 @@ class RabbitMQClient {
             logger.error({ err, routingKey }, 'Failed to publish message to RabbitMQ');
         }
     }
+
+    async checkHealth(): Promise<boolean> {
+        try {
+            const ch = await this.getChannel();
+            return ch !== null;
+        } catch {
+            return false;
+        }
+    }
 }
 
 export const rabbitMQ = new RabbitMQClient();
