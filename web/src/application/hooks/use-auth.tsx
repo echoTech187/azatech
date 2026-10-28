@@ -67,19 +67,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function useAuth(options?: { redirectIfUnauthenticated?: boolean }) {
+export function useAuth(options?: {
+  redirectIfUnauthenticated?: boolean;
+  redirectIfAuthenticated?: boolean;
+}) {
   const context = useContext(AuthContext);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
+    const stored = authRepository.getCurrentUser();
+    const currentUser = context?.user || stored;
+
     if (options?.redirectIfUnauthenticated && pathname !== '/login') {
-      const stored = authRepository.getCurrentUser();
-      if (!stored && !context?.user) {
+      if (!currentUser) {
         router.replace('/login');
       }
     }
-  }, [options?.redirectIfUnauthenticated, pathname, router, context?.user]);
+
+    if (options?.redirectIfAuthenticated) {
+      if (currentUser) {
+        router.replace('/dashboard');
+      }
+    }
+  }, [options?.redirectIfUnauthenticated, options?.redirectIfAuthenticated, pathname, router, context?.user]);
 
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');

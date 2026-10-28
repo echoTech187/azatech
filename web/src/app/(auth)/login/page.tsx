@@ -4,9 +4,23 @@ import { useState } from 'react';
 import { useAuth } from '@/src/application/hooks/use-auth';
 
 export default function LoginPage() {
-    const { login, isLoading, error } = useAuth();
+    const { login, isLoading, error, user } = useAuth({ redirectIfAuthenticated: true });
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+
+    if (user) {
+        return (
+            <main className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
+                <div className="bg-white rounded-xl shadow-lg border p-8 max-w-md w-full text-center space-y-3">
+                    <div className="inline-block animate-spin text-3xl">⏳</div>
+                    <h2 className="text-lg font-bold text-slate-800">Sesi Anda Aktif</h2>
+                    <p className="text-sm text-slate-500">
+                        Anda telah login sebagai <strong>{user.name}</strong>. Sedang mengalihkan ke dashboard...
+                    </p>
+                </div>
+            </main>
+        );
+    }
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
