@@ -61,6 +61,7 @@ interface MasterTabShellProps {
   canCreate?: boolean;
   canEdit?: boolean;
   canDelete?: boolean;
+  onCustomAdd?: () => void;
 }
 
 const inputStyle: React.CSSProperties = {
@@ -115,6 +116,7 @@ export default function MasterTabShell({
   canCreate = true,
   canEdit = true,
   canDelete = true,
+  onCustomAdd,
 }: MasterTabShellProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterActive, setFilterActive] = useState<'all' | 'active' | 'inactive'>('all');
@@ -341,6 +343,10 @@ export default function MasterTabShell({
   // Modal handlers
   // ========================
   const handleOpenAdd = () => {
+    if (onCustomAdd) {
+      onCustomAdd();
+      return;
+    }
     setModalMode('add');
     setEditingId(null);
     setFormData({ display_order: dataList.length + 1 });

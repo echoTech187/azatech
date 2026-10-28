@@ -15,7 +15,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="id">
       <body className="min-h-screen bg-slate-50 text-slate-900 antialiased">
         <Providers>
-          <Navbar />
+          <Suspense fallback={null}>
+            <Navbar />
+          </Suspense>
           <Suspense fallback={<div className="p-6 text-sm text-slate-500">Memuat halaman...</div>}>
             {children}
           </Suspense>
