@@ -487,7 +487,7 @@ export const swaggerDocument = {
     '/orders/{id}/invoice': {
       get: {
         tags: ['Orders & State Machine'],
-        summary: 'Unduh / Pratinjau Invoice pembayaran order (HTML/PDF)',
+        summary: 'Unduh / Pratinjau Invoice pembayaran order (PDF)',
         parameters: [
           { name: 'id', in: 'path', required: true, schema: { type: 'integer' } },
           { name: 'download', in: 'query', schema: { type: 'integer', enum: [0, 1] }, description: 'Set 1 untuk download file langsung sebagai attachment' },
