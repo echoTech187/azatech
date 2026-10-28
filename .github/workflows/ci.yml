@@ -64,6 +64,10 @@ jobs:
         working-directory: api
         run: npm ci || npm install
 
+      - name: Generate Prisma Client
+        working-directory: api
+        run: npx prisma generate
+
       - name: Run Typecheck
         working-directory: api
         run: npm run typecheck

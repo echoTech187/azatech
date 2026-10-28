@@ -32,7 +32,7 @@ export class OrdersService {
     items: Array<{ product_id: number; quantity: number }>
   ): string {
     const normalizedItems = [...items]
-      .map((i) => ({
+      .map((i: { product_id: number; quantity: number }) => ({
         product_id: Number(i.product_id),
         quantity: Number(i.quantity),
       }))
