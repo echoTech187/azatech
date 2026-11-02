@@ -6,10 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read
+
 jobs:
-  permissions:
-    contents: read
-    pull-requests: write
   backend:
     name: Backend CI (Test, Typecheck & Build)
     runs-on: ubuntu-latest
