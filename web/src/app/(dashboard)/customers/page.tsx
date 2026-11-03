@@ -105,11 +105,10 @@ export default function CustomersPage() {
         phone: formData.phone?.trim() || null,
         email: formData.email?.trim() || null,
       });
-      return true;
+      return { success: true };
     } catch (err: any) {
       const errMsg = err?.response?.data?.message || err?.message || 'Gagal menambahkan pelanggan';
-      alert(errMsg);
-      return false;
+      return { success: false, error: errMsg };
     }
   };
 
@@ -123,22 +122,20 @@ export default function CustomersPage() {
         phone: formData.phone?.trim() || null,
         email: formData.email?.trim() || null,
       });
-      return true;
+      return { success: true };
     } catch (err: any) {
       const errMsg = err?.response?.data?.message || err?.message || 'Gagal memperbarui data pelanggan';
-      alert(errMsg);
-      return false;
+      return { success: false, error: errMsg };
     }
   };
 
   const handleDelete = async (id: string | number) => {
     try {
       await deleteMasterCustomerAction(String(id));
-      return true;
+      return { success: true };
     } catch (err: any) {
       const errMsg = err?.response?.data?.message || err?.message || 'Gagal menghapus data pelanggan';
-      alert(errMsg);
-      return false;
+      return { success: false, error: errMsg };
     }
   };
 
