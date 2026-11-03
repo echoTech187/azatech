@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import crypto from 'crypto';
 import { app } from '../../src/app';
@@ -10,6 +10,7 @@ describe('RBAC Authorization & Double-Cancel Protection Integration Tests', () =
   let adminToken: string;
   let cashierToken: string;
   let customerId: string;
+  const createdProductIds: bigint[] = [];
 
   beforeAll(async () => {
     const admin = await prisma.user.findFirstOrThrow({ where: { role: 'admin' } });
@@ -27,6 +28,14 @@ describe('RBAC Authorization & Double-Cancel Protection Integration Tests', () =
 
     const customer = await prisma.customer.findFirstOrThrow({ where: { deleted_at: null } });
     customerId = customer.id;
+  });
+
+  afterAll(async () => {
+    if (createdProductIds.length > 0) {
+      await prisma.stockMovement.deleteMany({ where: { product_id: { in: createdProductIds } } });
+      await prisma.orderItem.deleteMany({ where: { product_id: { in: createdProductIds } } });
+      await prisma.product.deleteMany({ where: { id: { in: createdProductIds } } });
+    }
   });
 
   it('blocks cashier from deleting customer (403), managing products (403), or viewing sales reports (403)', async () => {
@@ -62,6 +71,7 @@ describe('RBAC Authorization & Double-Cancel Protection Integration Tests', () =
         low_stock_threshold: 2,
       },
     });
+    createdProductIds.push(product.id);
 
     // Buat order qty = 4 (stok berkurang dari 10 menjadi 6)
     const createRes = await request(app)

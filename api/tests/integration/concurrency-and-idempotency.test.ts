@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import crypto from 'crypto';
 import { prisma } from '../../src/config/database';
 import { ordersService } from '../../src/modules/orders/orders.service';
@@ -6,12 +6,21 @@ import { ordersService } from '../../src/modules/orders/orders.service';
 describe('Order Concurrency & Idempotency Integration Tests (PostgreSQL)', () => {
   let userId: bigint;
   let customerId: string;
+  const createdProductIds: bigint[] = [];
 
   beforeAll(async () => {
     const admin = await prisma.user.findFirstOrThrow({ where: { role: 'admin' } });
     const customer = await prisma.customer.findFirstOrThrow({ where: { deleted_at: null } });
     userId = admin.id;
     customerId = customer.id;
+  });
+
+  afterAll(async () => {
+    if (createdProductIds.length > 0) {
+      await prisma.stockMovement.deleteMany({ where: { product_id: { in: createdProductIds } } });
+      await prisma.orderItem.deleteMany({ where: { product_id: { in: createdProductIds } } });
+      await prisma.product.deleteMany({ where: { id: { in: createdProductIds } } });
+    }
   });
 
   it('prevents overselling: stock 5 with 20 parallel order requests (qty 1) -> exactly 5 succeed, 15 fail, final stock 0', async () => {
@@ -24,6 +33,8 @@ describe('Order Concurrency & Idempotency Integration Tests (PostgreSQL)', () =>
         low_stock_threshold: 2,
       },
     });
+    createdProductIds.push(product.id);
+    createdProductIds.push(product.id);
 
     const requests = Array.from({ length: 20 }, () =>
       ordersService
@@ -58,6 +69,7 @@ describe('Order Concurrency & Idempotency Integration Tests (PostgreSQL)', () =>
         low_stock_threshold: 2,
       },
     });
+    createdProductIds.push(product.id);
 
     const idempotencyKey = crypto.randomUUID();
     const first = await ordersService.createOrder({
