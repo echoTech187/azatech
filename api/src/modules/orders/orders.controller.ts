@@ -93,6 +93,7 @@ export class OrdersController {
           include: {
             customer: true,
             creator: { select: { id: true, name: true, role: true } },
+            items: { include: { product: true } },
           },
           orderBy: { order_date: 'desc' },
           skip: (page - 1) * perPage,
