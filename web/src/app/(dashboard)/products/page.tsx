@@ -219,6 +219,7 @@ export default function ProductPage() {
                 canCreate={isAdmin}
                 canEdit={isAdmin}
                 canDelete={isAdmin}
+                showToast={(msg) => alert(msg)}
                 onReload={() => loadData(pagination.page, pagination.limit, filter.search, filter.status, sort)}
                 onPageChange={(page) => loadData(page, pagination.limit, filter.search, filter.status, sort)}
                 onPageSizeChange={(limit) => loadData(1, limit, filter.search, filter.status, sort)}

@@ -176,6 +176,7 @@ export default function CustomersPage() {
         meta={meta}
         loading={loading}
         showActiveFilter={false}
+        showToast={(msg) => alert(msg)}
         canCreate={true} // Admin & Kasir dapat menambah pelanggan
         canEdit={true}   // Admin & Kasir dapat mengedit pelanggan
         canDelete={isAdmin} // HANYA Admin yang boleh menghapus pelanggan (RBAC Rule)
